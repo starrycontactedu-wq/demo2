@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英語閃卡樂樂翻 🐝</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Fredoka:wght@400;600;700&display=swap');
+
+    :root {
+        --duo-green: #58CC02;
+        --duo-green-dark: #46A302;
+        --duo-blue: #1CB0F6;
+        --duo-orange: #FF9600;
+        --duo-red: #FF4B4B;
+        --duo-purple: #A560FF;
+        --bg: #F7F9FA;
+        --card-bg: #FFFFFF;
+        --text: #3C3C3C;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Noto Sans TC', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    /* ===== 頂部標題 + 進度 ===== */
+    header {
+        text-align: center;
+        margin-bottom: 16px;
+        width: 100%;
+        max-width: 480px;
+    }
+    header h1 {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 1.8em;
+        color: var(--duo-green-dark);
+    }
+    header h1 span { font-size: 1.3em; }
+    .progress-bar {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    .progress-dot {
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #ddd;
+        transition: all 0.3s;
+    }
+    .progress-dot.done { background: var(--duo-green); }
+    .progress-dot.active { background: var(--duo-orange); transform: scale(1.3); }
+
+    /* ===== 閃卡本體 ===== */
+    .flashcard-wrapper {
+        perspective: 800px;
+        width: 100%;
+        max-width: 420px;
+        height: 320px;
+        margin: 20px 0;
+    }
+    .flashcard {
+        width: 100%; height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.5s cubic-bezier(.4,.2,.2,1);
+        cursor: pointer;
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+
+    .card-face {
+        position: absolute; inset: 0;
+        border-radius: 20px;
+        backface-visibility: hidden;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 30px 24px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .card-front {
+        background: var(--card-bg);
+        border: 3px solid var(--duo-green);
+    }
+    .card-back {
+        background: linear-gradient(135deg, #E8F8F0, #FFF);
+        border: 3px solid var(--duo-blue);
+        transform: rotateY(180deg);
+        justify-content: flex-start;
+        padding-top: 28px;
+    }
+
+    /* 正面 */
+    .card-emoji { font-size: 4em; margin-bottom: 12px; }
+    .card-en {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 2.4em;
+        font-weight: 700;
+        color: var(--duo-green-dark);
+    }
+    .card-hint {
+        margin-top: 14px;
+        font-size: 0.9em;
+        color: #999;
+    }
+
+    /* 背面 */
+    .back-syllables {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 2em;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 2px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .syll {
+        padding: 2px 6px;
+        border-radius: 8px;
+    }
+    /* 音節彩虹色 */
+    .syll:nth-child(1) { background: #FFE066; }
+    .syll:nth-child(2) { background: #B5E48C; }
+    .syll:nth-child(3) { background: #99D98C; }
+    .syll:nth-child(4) { background: #89C2D9; }
+    .syll:nth-child(5) { background: #BDB2FF; }
+    .syll.stress { border: 2px solid var(--duo-red); }
+
+    .back-phonetic {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 1.1em;
+        color: #888;
+        margin-bottom: 10px;
+    }
+    .back-zh {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: var(--duo-blue);
+        margin-bottom: 6px;
+    }
+    .back-example {
+        font-size: 0.95em;
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        line-height: 1.4;
+    }
+
+    /* ===== 導航鈕 ===== */
+    .nav-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 8px;
+    }
+    .nav-btn {
+        font-family: 'Fredoka', sans-serif;
+        font-size: 1.1em;
+        padding: 12px 28px;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+    }
+    .nav-btn:active { transform: scale(0.95); }
+    .btn-prev { background: #E0E0E0; color: #555; }
+    .btn-prev:hover { background: #D0D0D0; }
+    .btn-next { background: var(--duo-green); color: white; }
+    .btn-next:hover { background: var(--duo-green-dark); }
+    .btn-speak {
+        background: var(--duo-orange);
+        color: white;
+        padding: 12px 18px;
+    }
+    .btn-speak:hover { background: #E68600; }
+
+    /* 分類標籤 */
+    .category-tag {
+        display: inline-block;
+        font-family: 'Fredoka', sans-serif;
+        font-size: 0.85em;
+        padding: 4px 14px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+        color: white;
+    }
+    .tag-months { background: var(--duo-purple); }
+    .tag-days { background: var(--duo-blue); }
+    .tag-seasons { background: var(--duo-orange); }
+
+    /* 底部提示 */
+    footer {
+        margin-top: 24px;
+        font-size: 0.85em;
+        color: #AAA;
+        text-align: center;
+    }
+
+    @media (max-width: 480px) {
+        .flashcard-wrapper { height: 290px; }
+        .card-en { font-size: 2em; }
+        .back-syllables { font-size: 1.6em; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1><span>🐝</span> 英語閃卡樂樂翻</h1>
+    <p>點卡片翻面 · 聽發音 · 拆音節</p>
+    <div class="progress-bar" id="progressBar"></div>
+</header>
+
+<div id="categoryTag" class="category-tag"></div>
+
+<div class="flashcard-wrapper" onclick="flipCard()">
+    <div class="flashcard" id="flashcard">
+        <div class="card-face card-front" id="cardFront"></div>
+        <div class="card-face card-back" id="cardBack"></div>
+    </div>
+</div>
+
+<div class="nav-row">
+    <button class="nav-btn btn-prev" onclick="event.stopPropagation(); prevCard()">◀ 上一張</button>
+    <button class="nav-btn btn-speak" onclick="event.stopPropagation(); speakCurrent()">🔊 朗讀</button>
+    <button class="nav-btn btn-next" onclick="event.stopPropagation(); nextCard()">下一張 ▶</button>
+</div>
+
+<footer>
+    💡 點卡片翻面看音節拆分｜仿 Duolingo 遊戲化設計｜共 <span id="totalCount">0</span> 張
+</footer>
+
+<script>
+// ========================================
+// 資料庫：音節拆分（參考 Preply / Nature Method）
+// syll: 每個音節，stress 標重音音節（粗體紅框）
+// ========================================
+const cards = [
+    // --- 月份 ---
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '❄️',
+      en: 'January', zh: '一月', phonetic: '/ˈdʒæn.ju.er.i/',
+      syll: [{ t: 'Jan', s: true }, { t: 'u', s: false }, { t: 'ar', s: false }, { t: 'y', s: false }],
+      example: 'My birthday is in January.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '💘',
+      en: 'February', zh: '二月', phonetic: '/ˈfeb.ru.er.i/',
+      syll: [{ t: 'Feb', s: true }, { t: 'ru', s: false }, { t: 'ar', s: false }, { t: 'y', s: false }],
+      example: 'February has 28 days.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🌷',
+      en: 'March', zh: '三月', phonetic: '/mɑːrtʃ/',
+      syll: [{ t: 'March', s: true }],
+      example: 'March is windy.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🌧️',
+      en: 'April', zh: '四月', phonetic: '/ˈeɪ.prəl/',
+      syll: [{ t: 'A', s: true }, { t: 'pril', s: false }],
+      example: 'April showers bring May flowers.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🌸',
+      en: 'May', zh: '五月', phonetic: '/meɪ/',
+      syll: [{ t: 'May', s: true }],
+      example: 'May is warm.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🍉',
+      en: 'June', zh: '六月', phonetic: '/dʒuːn/',
+      syll: [{ t: 'June', s: true }],
+      example: 'School ends in June.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🏖️',
+      en: 'July', zh: '七月', phonetic: '/dʒuˈlaɪ/',
+      syll: [{ t: 'Ju', s: false }, { t: 'ly', s: true }],
+      example: 'We go to the beach in July.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🏕️',
+      en: 'August', zh: '八月', phonetic: '/ˈɔː.ɡəst/',
+      syll: [{ t: 'Au', s: true }, { t: 'gust', s: false }],
+      example: 'August is hot.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '📚',
+      en: 'September', zh: '九月', phonetic: '/səpˈtem.bər/',
+      syll: [{ t: 'Sep', s: false }, { t: 'tem', s: true }, { t: 'ber', s: false }],
+      example: 'School starts in September.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🎃',
+      en: 'October', zh: '十月', phonetic: '/ɑːkˈtoʊ.bər/',
+      syll: [{ t: 'Oc', s: false }, { t: 'to', s: true }, { t: 'ber', s: false }],
+      example: 'Halloween is in October.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🦃',
+      en: 'November', zh: '十一月', phonetic: '/noʊˈvem.bər/',
+      syll: [{ t: 'No', s: false }, { t: 'vem', s: true }, { t: 'ber', s: false }],
+      example: 'Thanksgiving is in November.' },
+    { cat: 'months', catLabel: '🗓️ 月份', emoji: '🎄',
+      en: 'December', zh: '十二月', phonetic: '/dɪˈsem.bər/',
+      syll: [{ t: 'De', s: false }, { t: 'cem', s: true }, { t: 'ber', s: false }],
+      example: 'Christmas is in December!' },
+
+    // --- 星期 ---
+    { cat: 'days', catLabel: '📅 星期', emoji: '💼',
+      en: 'Monday', zh: '星期一', phonetic: '/ˈmʌn.deɪ/',
+      syll: [{ t: 'Mon', s: true }, { t: 'day', s: false }],
+      example: 'I go to school on Monday.' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '🐯',
+      en: 'Tuesday', zh: '星期二', phonetic: '/ˈtuːz.deɪ/',
+      syll: [{ t: 'Tues', s: true }, { t: 'day', s: false }],
+      example: 'Tuesday is gym day.' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '🐪',
+      en: 'Wednesday', zh: '星期三', phonetic: '/ˈwenz.deɪ/',
+      syll: [{ t: 'Wednes', s: true }, { t: 'day', s: false }],
+      example: 'Wednesday is hump day! 🐪' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '⚡',
+      en: 'Thursday', zh: '星期四', phonetic: '/ˈθɜːz.deɪ/',
+      syll: [{ t: 'Thurs', s: true }, { t: 'day', s: false }],
+      example: 'Thursday is almost Friday.' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '🎉',
+      en: 'Friday', zh: '星期五', phonetic: '/ˈfraɪ.deɪ/',
+      syll: [{ t: 'Fri', s: true }, { t: 'day', s: false }],
+      example: 'Friday night! 🎉' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '🎮',
+      en: 'Saturday', zh: '星期六', phonetic: '/ˈsæt.ər.deɪ/',
+      syll: [{ t: 'Sat', s: true }, { t: 'ur', s: false }, { t: 'day', s: false }],
+      example: 'I play games on Saturday.' },
+    { cat: 'days', catLabel: '📅 星期', emoji: '☀️',
+      en: 'Sunday', zh: '星期日', phonetic: '/ˈsʌn.deɪ/',
+      syll: [{ t: 'Sun', s: true }, { t: 'day', s: false }],
+      example: 'Sunday is family day.' },
+
+    // --- 四季 ---
+    { cat: 'seasons', catLabel: '🌍 四季', emoji: '🌱',
+      en: 'Spring', zh: '春天', phonetic: '/sprɪŋ/',
+      syll: [{ t: 'Spring', s: true }],
+      example: 'Spring is rainy.' },
+    { cat: 'seasons', catLabel: '🌍 四季', emoji: '🌊',
+      en: 'Summer', zh: '夏天', phonetic: '/ˈsʌm.ər/',
+      syll: [{ t: 'Sum', s: true }, { t: 'mer', s: false }],
+      example: 'I swim in summer.' },
+    { cat: 'seasons', catLabel: '🌍 四季', emoji: '🍂',
+      en: 'Autumn', zh: '秋天', phonetic: '/ˈɔː.təm/',
+      syll: [{ t: 'Au', s: true }, { t: 'tumn', s: false }],
+      example: 'Leaves fall in autumn.' },
+    { cat: 'seasons', catLabel: '🌍 四季', emoji: '☃️',
+      en: 'Winter', zh: '冬天', phonetic: '/ˈwɪn.tər/',
+      syll: [{ t: 'Win', s: true }, { t: 'ter', s: false }],
+      example: 'It snows in winter.' },
+];
+
+// ========================================
+// 狀態
+// ========================================
+let current = 0;
+
+function render() {
+    const c = cards[current];
+    document.getElementById('totalCount').textContent = cards.length;
+    document.getElementById('categoryTag').className = 'category-tag tag-' + c.cat;
+    document.getElementById('categoryTag').textContent = c.catLabel;
+
+    // 正面
+    document.getElementById('cardFront').innerHTML = `
+        <div class="card-emoji">${c.emoji}</div>
+        <div class="card-en">${c.en}</div>
+        <div class="card-hint">👆 點我翻面看音節</div>
+    `;
+
+    // 背面音節
+    const syllHtml = c.syll.map(s =>
+        `<span class="syll${s.s ? ' stress' : ''}">${s.t}</span>`
+    ).join('<span style="color:#CCC;font-size:0.8em">·</span>');
+
+    document.getElementById('cardBack').innerHTML = `
+        <div class="back-syllables">${syllHtml}</div>
+        <div class="back-phonetic">${c.phonetic}</div>
+        <div class="back-zh">${c.zh}</div>
+        <div class="back-example">${c.example}</div>
+        <div style="margin-top:auto; font-size:0.8em; color:#BBB;">👆 再點一次翻回去</div>
+    `;
+
+    // 進度點
+    const bar = document.getElementById('progressBar');
+    bar.innerHTML = cards.map((_, i) =>
+        `<div class="progress-dot${i === current ? ' active' : i < current ? ' done' : ''}"></div>`
+    ).join('');
+
+    // 卡片復位（確保顯示正面）
+    document.getElementById('flashcard').classList.remove('flipped');
+}
+
+function flipCard() {
+    document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function nextCard() {
+    current = (current + 1) % cards.length;
+    render();
+}
+
+function prevCard() {
+    current = (current - 1 + cards.length) % cards.length;
+    render();
+}
+
+function speakCurrent() {
+    const c = cards[current];
+    if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(c.en);
+        u.lang = 'en-US';
+        u.rate = 0.75;
+        speechSynthesis.speak(u);
+    }
+}
+
+// 鍵盤快捷鍵
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === 'ArrowLeft') prevCard();
+    if (e.key === ' ') { e.preventDefault(); flipCard(); }
+});
+
+render();
+</script>
+
+</body>
+</html>
